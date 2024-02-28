@@ -18,13 +18,6 @@ conn = sqlite3.connect('uwi2.db')
 c = conn.cursor()
 create_ = True
 
-with open('file.sql','a') as file:
-    file.write('''
-create database uwi2;
-USE uwi2;\n\n''')
-
-
-
 
 
 # Create the tables
@@ -34,13 +27,13 @@ LectureTable = '''CREATE TABLE IF NOT EXISTS Lecturer (
                     LeclName VARCHAR(255),
                     Department VARCHAR(255)
                     );'''
+
 StudentTable = '''CREATE TABLE IF NOT EXISTS Student (
 				 StudentID INTEGER PRIMARY KEY,
 				 FirstName VARCHAR(55),
 				 LastName VARCHAR(55)
 				 );'''
 
-# Create the Teaches table
 TeachesTable = '''CREATE TABLE IF NOT EXISTS Teaches (
                 LecId INTEGER,
                 CourseID VARCHAR(10),
@@ -49,7 +42,6 @@ TeachesTable = '''CREATE TABLE IF NOT EXISTS Teaches (
                 FOREIGN KEY (CourseID) REFERENCES Course(CourseID)
                 );'''
 
-# Create the Course table
 CourseTable = '''CREATE TABLE IF NOT EXISTS Course (
                 CourseID VARCHAR(10) PRIMARY KEY,
                 CourseCode VARCHAR(55),
@@ -62,20 +54,22 @@ EnrolTable = '''CREATE TABLE IF NOT EXISTS Enroll (
 				 Grade INT(3),
 				 PRIMARY KEY (StudentID, CourseID),
 				 FOREIGN KEY (StudentID) REFERENCES Student(StudentID),
-				 FOREIGN KEY (CourseID) REFERENCES Course(CourseID)
+				 FOREIGN KEY (CourseID) REFERENCES Course(CourseID) ON DELETE RESTRICT
 				 );'''
 
 
 
 if Create_Tables == True:
-    with open('file.sql', 'a') as file:
+    with open('schemaXqueries.sql', 'a') as file:
+        file.write('''CREATE DATABASE IF NOT EXISTS uwi2;\n''')
+        file.write('''USE uwi2;\n\n''')
         file.write(LectureTable + '\n\n')
         file.write(StudentTable + '\n\n')
         file.write(TeachesTable + '\n\n')
         file.write(CourseTable + '\n\n')
         file.write(EnrolTable + '\n\n')
 
-        # Eecuting sql
+        # Executing sql
         c.execute(LectureTable[:-1])
         c.execute(StudentTable[:-1])
         c.execute(TeachesTable[:-1])
@@ -84,33 +78,31 @@ if Create_Tables == True:
 
 
 
+# Generating Fake Data
 
+# Fake Course: A mapping from a course's ID to the Course code and name
 course_codes = [f'{fake.pystr(min_chars=4, max_chars=4).upper()}{str(random.randint(2000, 4000))}' for _ in range(50)]
 course_dict = {}
 for i, course_code in enumerate(course_codes, start=1):
     course_dict[str(i)] = [course_code, f'Course {i}']
 
 
-
-
-
-# Define the list of values
+# Fake Dept: A mapping from the lecture IDs to a department
 lecID_dept_ = {'500000001': 'Humanities', '500000002': 'Linguistics', '500000003': 'Engineering', 
  '500000004': 'Science and Technology', '500000005': 'Geography', '500000006': 'Medical', 
  '500000007': 'Humanities', '500000008': 'Linguistics', '500000009': 'Engineering', 
  '500000010': 'Science and Technology'}
 
+# Fake LecName: A mapping from the lecture IDs to a lecture names
 lecID_name_ = {'500000001': ['Lance', 'Mcdonald'], '500000002': ['Jesse', 'Ruiz'], '500000003': ['Claire', 'Moon'], 
                '500000004': ['Brian', 'Brady'], '500000005': ['George', 'Yoder'], '500000006': ['Maureen', 'Fernandez'], 
                '500000007': ['Larry', 'Chan'], '500000008': ['Cheyenne', 'Acevedo'], '500000009': ['Luis', 'Adams'], 
                '500000010': ['Nicole', 'Daniels']}
 
+# Fake StudentNames: A mapping from the Student IDs to names
 Student_name = dict()
-# # Generate fake names for 10 students
 for i in range(620130499, 620130499 + 300):
     Student_name[str(i)] = [fake.first_name(), fake.last_name()]
-
- 
 
 # Student Table funtions
 def stu_fName(i):
@@ -120,7 +112,6 @@ def stu_lName(i):
     i = str(i)
     return Student_name[i][1]
 
-# Funtions Funtion
 # Lecture Table funtions
 def lec_fName(i):
     i = str(i)
@@ -140,14 +131,10 @@ def cName(i):
 
 
 
-
-# Populate the Lecturer table with random data
-# for i in range(500000001, 500000011):
-#     c.execute("INSERT INTO Lecturer (LecId, LecfName, LeclName, Department) VALUES (?, ?, ?, ?)", (i, lec_fName(i), lec_lName(i), lec_dept(i)))
-
+# INSERT queries
 if Insert_Lecturer == True: 
     # Open the file in append mode
-    with open('file.sql', 'a') as file:
+    with open('insert.sql', 'a') as file:
         # Populate the Lecturer table with random data
         Lecturer_insert = f"INSERT INTO Lecturer (LecId, LecfName, LeclName, Department) VALUES "
         for i in range(500000001, 500000011):
@@ -160,7 +147,7 @@ if Insert_Lecturer == True:
 
 if Insert_Student == True:
     # Open the file in append mode
-    with open('file.sql', 'a') as file:
+    with open('insert.sql', 'a') as file:
         # Populate the Lecturer table with random data
         Student_insert = f"INSERT INTO Student (StudentID, FirstName, LastName) VALUES "
         for i in range(620130499, 620130499 + 300):
@@ -174,7 +161,7 @@ if Insert_Student == True:
 
 if Insert_Course == True: 
     # Open the file in append mode
-    with open('file.sql', 'a') as file:
+    with open('insert.sql', 'a') as file:
         # Populate the Lecturer table with random data
         Course_insert = f"INSERT INTO Course (CourseID, CourseCode, CourseName) VALUES "
         for i in range(1, 51):
@@ -188,7 +175,7 @@ if Insert_Course == True:
 
 
 if Insert_Teaches == True:
-    with open('file.sql', 'a') as file:
+    with open('insert.sql', 'a') as file:
         sql_command = '''INSERT INTO TEACHES (LecID, CourseID) VALUES '''
         unique_constraint = dict()
         courses = [i for i in range(1,51)]
@@ -210,7 +197,7 @@ if Insert_Teaches == True:
         c.execute(sql_command[:-1])
 
 if Insert_Enrol == True:
-    with open('file.sql', 'a') as file:
+    with open('insert.sql', 'a') as file:
         sql_command = '''INSERT INTO Enroll (StudentID, CourseID,Grade) VALUES'''
         unique_constraint = dict()
         enrolCount = dict()
@@ -230,15 +217,102 @@ if Insert_Enrol == True:
         c.execute(sql_command[:-1])
 
 
+# Question Queries
 
-    
-# c.execute("SELECT * FROM Enroll")
-c.execute("SELECT * FROM Teaches")
-rows = c.fetchall()
-for row in rows:
-    print(row)
+# Question 1a to 1f
 
-# Commit the changes and close the connection
+q1a = ''' 
+SELECT LecfName, LeclName
+FROM Lecturer
+WHERE LecId = (
+SELECT LecId
+FROM Teaches
+GROUP BY LecId
+ORDER BY COUNT(*) DESC
+LIMIT 1);
+'''
+
+q1b = ''' 
+SELECT LecfName, LeclName
+FROM Lecturer
+WHERE LecId = (
+SELECT LecId
+FROM Teaches
+GROUP BY LecId
+ORDER BY COUNT(*) ASC
+LIMIT 1);
+'''
+
+q1c = '''
+SELECT Table1.CourseID, Course.CourseName, EnrollCount
+FROM
+    (SELECT Enroll.CourseID as CourseID, COUNT(*) as EnrollCount 
+     FROM Enroll
+     GROUP BY CourseID) AS Table1
+JOIN Course ON Table1.CourseID = Course.CourseID;
+
+'''
+
+q1d = '''
+SELECT Table1.CourseID, Course.CourseName, CourseAverage
+FROM
+    (SELECT Enroll.CourseID, ROUND(AVG(Grade), 1) as CourseAverage
+    FROM Enroll
+    GROUP BY Enroll.CourseID) as Table1
+JOIN Course on Course.CourseID = Table1.CourseID;
+'''
+
+
+q1e = '''
+SELECT  Table1.StudentID, Student.FirstName, Student.LastName, Average 
+FROM
+    (SELECT Enroll.StudentID as StudentID , ROUND(AVG(Enroll.Grade) ,1) AS Average 
+     FROM Enroll
+     GROUP BY Enroll.StudentID ) AS Table1
+JOIN Student ON Table1.StudentID = Student.StudentID
+ORDER BY Average DESC
+LIMIT 1;
+ '''
+
+q1f = '''
+SELECT * 
+FROM
+    (SELECT  Table1.StudentID, Student.FirstName, Student.LastName, Average 
+    FROM
+        (SELECT Enroll.StudentID as StudentID , ROUND(AVG(Enroll.Grade) ,1) AS Average 
+        FROM Enroll
+        GROUP BY Enroll.StudentID ) AS Table1
+    JOIN Student ON Table1.StudentID = Student.StudentID
+    ORDER BY Average DESC
+    LIMIT 10) AS Table2
+ORDER BY Average ASC;
+
+ '''
+def runQuery(str_):
+    c.execute(str_)
+    rows = c.fetchall()
+    for row in rows:
+        print(row)
+
+
+with open('schemaXqueries.sql', 'a') as file:
+    file.write(q1a + '\n\n')
+    file.write(q1b + '\n\n')
+    file.write(q1c + '\n\n')
+    file.write(q1d + '\n\n')
+    file.write(q1e + '\n\n')
+    file.write(q1f + '\n\n')
+
+# runQuery(q1a)
+# runQuery(q1b)
+# runQuery(q1c)
+# runQuery(q1d)
+# runQuery(q1e)
+# runQuery(q1f)
+
+  
+
+# Commiting the changes and close the connection
 conn.commit()
 conn.close()
 
